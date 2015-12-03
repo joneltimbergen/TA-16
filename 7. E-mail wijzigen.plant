@@ -1,0 +1,52 @@
+@startuml
+
+
+actor User
+participant tippiqWebsite
+control API
+database PostgresQL
+database userDatabase
+
+title 1. tippiq - e-mail wijzigen
+
+User o-> tippiqWebsite : InsertUserLogin
+tippiqWebsite -> API : sendLoginRequest\n(userCredentials)
+API -> userDatabase :  sendLoginRequest\n(userCredentials)
+activate userDatabase
+userDatabase --> API : grantAcces\n(yes/no)
+
+user -> tippiqWebsite : changeEmailRequest
+tippiqWebsite -> API : changeEmailRequest.req
+API -> PostgresQL : changeEmailRequest.req
+API -> PostgresQL changeEmailRequest.req
+
+PostgresQL -> PostgresQL : query(insert)
+
+API -> userDatabase
+
+
+
+API -> API : generateToken\n(tokenId)
+API -> tippiqWebsite : generateToken\n(tokenId)
+tippiqWebsite ->o User : sendStatus:\n<<login successfull>>
+note left : User is \nauthenticated
+tippiqWebsite -> API : sendToken\n(tokenId)
+
+
+
+legend right 
+**Legenda**
+__note__ = extra annotation
+(...) = data_attribute (separated by ,)
+__conf__ = data confirmation
+__req__ = data request
+endlegend
+
+
+
+
+
+@enduml
+
+
+

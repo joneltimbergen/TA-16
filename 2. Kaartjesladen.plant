@@ -1,0 +1,56 @@
+@startuml
+title 2. tippiq - Load cards
+actor externalParty
+actor User
+participant Tippiqwebsite
+control API
+database UserManagement
+database Database
+
+
+== input cards ==
+
+externalParty o-> API : recieveMessages\n(credentials, cardData)
+API -> API : generateCard\n(cardModel)
+|||
+activate API
+note right : API checks\ncredentials
+API -> Database : saveCard\n(cardModel)
+deactivate API
+activate Database
+Database -> Database : query(insert)
+deactivate Database
+Database --> API : receiveCard\n(cardId)
+API -->o externalParty : receiveCard\n(cardId)
+== output cards ==
+Tippiqwebsite o-> API : showCards.req\n(accessToken)
+API -> API : validateAccessToken\n(userId
+activate API
+API -> UserManagement : getUserProfile\n(userId)
+deactivate API
+activate UserManagement
+UserManagement --> API : sendUserProfile\n(settings,location)
+deactivate UserManagement
+activate API
+API -> Database : getCards.req\n(settings, location)
+deactivate API
+activate Database
+
+Database -> Database : query(select)
+deactivate Database
+Database --> API : showCards.conf\n(cardModel)
+API -->x Tippiqwebsite : showCards.conf\n(cardModel)
+note left : Cards are\nin user stream
+
+legend right 
+**Legenda**
+__note__ = extra annotation
+(...) = data_attribute (separated by ,)
+__conf__ = data confirmation
+__req__ = data request
+endlegend
+
+@enduml
+
+
+

@@ -1,0 +1,56 @@
+@startuml
+
+
+actor Gebruiker
+entity tippiqWebsite
+entity API
+database PostgresQL
+database UserDatabase
+
+title 1. tippiq - wachtwoord wijzigen
+
+Gebruiker -> tippiqWebsite : InsertUserLogin
+tippiqWebsite -> API : sendLoginRequest (user-credentials)
+API -> UserDatabase :  sendLoginRequest (user-credentials)
+activate UserDatabase
+UserDatabase --> API : grantAcces\n(yes/no)
+note right : User is \nauthenticated
+deactivate UserDatabase
+
+alt If no access = Login error
+API --> tippiqWebsite : sendLoginError
+
+tippiqWebsite --> Gebruiker : sendLoginError
+activate Gebruiker
+Gebruiker -> tippiqWebsite : insertForgetPassword\n(user-credentials)
+deactivate Gebruiker
+tippiqWebsite -> API : SendresetPasswordRequest\n(user-credentials)
+activate API
+API --> Gebruiker : sendMail\n(resetLink)(resetToken)
+note right : New password\n is created
+deactivate API
+activate Gebruiker
+Gebruiker -> tippiqWebsite : insertNewPassword\n(user-credentials)
+deactivate Gebruiker
+tippiqWebsite -> API : sendNewPassword\n(newPassword)
+API -> UserDatabase : pushNewPassword\n(newPassword)
+activate UserDatabase
+UserDatabase --> API : newPassword.conf
+note right : New password\n is stored
+deactivate UserDatabase
+API ->o tippiqWebsite : sendStatus: <<new password is set>>
+
+|||
+end
+
+
+
+
+
+
+
+
+@enduml
+
+
+

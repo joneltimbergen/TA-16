@@ -1,0 +1,83 @@
+@startuml
+actor User
+participant tippiqWebsite
+control API
+control addressAPI
+database UserDatabase
+database addressDatabase
+
+== step 1 ==
+
+title 5. tippiq - Registration
+
+User o-> tippiqWebsite : clickRegistrer
+activate tippiqWebsite
+tippiqWebsite --> User : sendRegistrationForm
+deactivate tippiqWebsite
+tippiqWebsite --> addressAPI : requestAddress.req\n(addressModel)
+
+addressAPI -> addressDatabase : selectAdress.req\n(addressModel)
+activate addressDatabase
+addressDatabase --> addressAPI : confirmAdress.conf\n(addressModel)
+deactivate addressDatabase
+addressAPI --> tippiqWebsite : suggestAdress.conf\n(addressModel)
+
+tippiqWebsite --> User : suggestAdress.conf\n(addressModel)
+activate User
+User -> tippiqWebsite : chooseAdress+Location\n(addressModel)
+deactivate User
+activate tippiqWebsite
+== step 2 ==
+
+tippiqWebsite --> User : showForm
+deactivate tippiqWebsite
+activate User
+User -> tippiqWebsite : fillinForm\n(userCredentials)
+deactivate User
+note right: User is\nregistred
+activate tippiqWebsite
+== step 3 ==
+
+tippiqWebsite -> User : sendStatus\n<<Recieve notifications?>>
+deactivate tippiqWebsite
+activate User
+User -> tippiqWebsite : receiveNotifications (yes/no)
+deactivate User 
+tippiqWebsite -> API : madeUserProfile\n(userId)
+
+API -> UserDatabase : query(put)
+activate UserDatabase
+UserDatabase --> API : confirmUserProfile\n(userId)
+deactivate UserDatabase
+
+
+API -> tippiqWebsite : sendStatus\n<<Registration succeeded>>
+
+
+activate tippiqWebsite
+tippiqWebsite -> API : login process
+note right: see diagram 1\n[tippiq login]
+deactivate tippiqWebsite
+activate API
+API --> tippiqWebsite : loggedinUser\n(userId)
+deactivate API
+tippiqWebsite -->x User : showStreamCards\n(cardModel)
+
+
+
+legend right 
+**Legenda**
+__note__ = extra annotation
+(...) = data_attribute (separated by ,)
+__conf__ = data confirmation
+__req__ = data request
+endlegend
+
+
+
+
+
+@enduml
+
+
+

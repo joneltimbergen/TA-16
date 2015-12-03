@@ -1,0 +1,69 @@
+@startuml
+actor User
+participant tippiqWebsite
+control API
+entity UserManagement
+entity Authentication
+
+
+title 1. tippiq - Inloggen
+User o-> tippiqWebsite : InsertUserLogin
+tippiqWebsite -> API : sendLoginRequest\n(userCredentials)
+API -> UserManagement :  sendLoginRequest\n(userCredentials)
+activate UserManagement
+UserManagement --> API : grantAcces\n(yes/no)
+|||
+note right : User is \nauthenticated
+deactivate UserManagement
+
+
+alt If no access = Login error
+API --> tippiqWebsite : sendLoginError
+User -> tippiqWebsite : forgotPassword
+User -> tippiqWebsite : insertEmailaddress(email)
+
+activate User
+
+deactivate User
+tippiqWebsite -> API : SendresetPasswordRequest\n(email)
+activate API
+note right : Password reset\ntoken is generated
+API --> User : sendMail\n(resetLink)(resetToken)
+
+deactivate API
+
+User -> tippiqWebsite : clickonLink(resetToken)
+User -> tippiqWebsite : insertNewPassword\n(password)
+
+tippiqWebsite -> API : sendNewPassword\n(newPassword, token)
+note right : Validate\ntoken
+API -> UserManagement : pushNewPassword.req\n(newPassword)
+activate UserManagement
+UserManagement --> API : newPassword.conf
+note right : New password\n is stored
+deactivate UserManagement
+API ->o tippiqWebsite : sendStatus:\n<<new password is set>>
+|||
+end
+|||
+activate API
+API -> Authentication : generateToken
+Authentication --> API : token
+
+API -> tippiqWebsite : generateToken\n(token)
+
+tippiqWebsite ->x User : sendStatus:\n<<login successfull>>
+
+note left : User is \nauthenticated
+tippiqWebsite -> API : sendToken\n(tokenId)
+legend right 
+**Legenda**
+__note__ = extra annotation
+(...) = data_attribute (separated by ,)
+__conf__ = data confirmation
+__req__ = data request
+endlegend
+@enduml
+
+
+

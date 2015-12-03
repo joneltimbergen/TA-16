@@ -1,0 +1,132 @@
+@startuml
+
+title 4. tippiq - 112 alert
+
+Actor P2000
+entity 112API #B2B1B9
+Actor User
+entity Phone
+entity 112Website #B2B1B9
+entity tippiqWebsite
+control huisregelAPI
+control controlAPI
+control 112API #B2B1B9
+database huisregelDatabase
+database UserDatabase
+database 112database #B2B1B9
+
+== configure huisregels ==
+
+User o-> tippiqWebsite : clickMijntoestemmingen
+note left : User is\nlogged in
+tippiqWebsite -> huisregelAPI : requestOverzichtHuisdiensten
+
+huisregelAPI -> huisregelDatabase : readAllRelevantHuisdiensten
+
+huisregelDatabase --> huisregelAPI : sendAllRelevantHuisdiensten
+
+huisregelAPI --> tippiqWebsite : showAllRelevantHuisdiensten
+
+tippiqWebsite --> User : showAllRelevantHuisdiensten \n(huisregelModel, location, settings)
+
+User -> tippiqWebsite : selectHuisdienst
+tippiqWebsite --> huisregelAPI : requestSettings\n(huisregelModel, locaton, settings)
+activate huisregelAPI
+huisregelAPI -> huisregelDatabase : requestHuisregel\n(huisregelModel, locaton, settings)
+deactivate huisregelAPI
+activate huisregelDatabase
+huisregelDatabase --> huisregelAPI : confirmHuisregel.conf\n(huisregelModel, locaton, settings)
+deactivate huisregelDatabase
+activate huisregelAPI
+huisregelAPI --> tippiqWebsite : showSettings.conf\n(huisregelModel, locaton, settings)
+deactivate huisregelAPI
+tippiqWebsite --> User : showSettings\n(huisregelModel, locaton, settings)
+activate User
+User -> tippiqWebsite : chooseSettings+Location\n(huisregelModel, locaton, settings)
+deactivate User
+
+
+tippiqWebsite -> huisregelAPI : updateSettingsRequest\n(location, settings)
+huisregelAPI -> huisregelAPI : createHuisregel
+
+huisregelAPI -> IRMA_module : requestSignature\n(huisregel, huisID)
+note left : auhtentication of\n huisregel is needed
+activate IRMA_module
+IRMA_module --> huisregelAPI : confirmQrCode\n(QRCode)
+deactivate IRMA_module
+
+huisregelAPI -> tippiqWebsite : sendQrCode
+Phone -> tippiqWebsite : scanQrCode
+Phone -> IRMA_module : connectRequest
+activate IRMA_module
+note left: connection betweeon\nphone and irma_module\nestablished
+IRMA_module -> Phone : signRequest\n(huisregels, attributes)
+deactivate IRMA_module
+
+Phone -> User : accesRequest
+activate User
+User --> Phone : confirm
+deactivate User
+Phone -> Phone : createSignature
+activate Phone
+Phone -> IRMA_module : sendSignature\n(signature)
+deactivate Phone
+note right: signature\nis received
+
+
+IRMA_module -> IRMA_module : checkSignature
+
+	alt signature ok
+    IRMA_module --> huisregelAPI : sendSignatureOK\n(signature)
+    activate huisregelAPI
+    huisregelAPI -> huisregelDatabase : sendSettingsUpdated\n(huisregel, signature)
+    deactivate huisregelAPI
+    activate huisregelDatabase
+    huisregelDatabase -> huisregelDatabase : query\n(insert)
+    deactivate huisregelDatabase
+    huisregelDatabase --> huisregelAPI : sendStatusOk
+    
+    huisregelAPI --> tippiqWebsite : sendHuisregelAdded
+    |||
+	else wrong signature
+    IRMA_module --> huisregelAPI : sendWrongSignature
+    huisregelAPI -->x tippiqWebsite : sendWrongSignature
+	|||
+	end
+
+
+
+== receive 112 alert ==
+
+P2000 o-> 112API : send112alert 
+activate 112API
+112API -> controlAPI : recieve112alerts\n(112alertId, cardData)
+deactivate 112API
+activate controlAPI
+controlAPI -> controlAPI : check\nsource
+deactivate controlAPI
+
+
+controlAPI --> 112Website : accessGranted
+activate 112Website
+112Website -> 112API : accesToken
+deactivate 112Website
+112API -> 112database : select112data
+activate 112database
+112database --> 112API : provideInformation
+deactivate 112database
+112API ->x 112Website : provideInformationd
+
+
+
+
+legend right 
+**Legenda**
+__note__ = extra annotation
+(...) = data_attribute (separated by ,)
+__conf__ = data confirmation
+__req__ = data request
+endlegend
+
+
+@enduml

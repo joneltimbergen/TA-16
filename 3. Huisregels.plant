@@ -1,0 +1,87 @@
+@startuml
+
+title 3. tippiq - huisregels
+
+entity externalParty
+Actor User
+entity 112Website
+entity tippiqWebsite
+control API
+database huisregelDatabase
+database UserDatabase
+
+
+== configure huisregels ==
+
+User o-> tippiqWebsite : clickConfigureHuisregels
+activate tippiqWebsite
+tippiqWebsite --> User : sendHuisregelForm\n(huisregelModel)
+deactivate tippiqWebsite
+
+tippiqWebsite --> API : requestHuisregel.req\n(huisregelModel,location, settings)\n(huisregelId)
+deactivate huisregelDatabase
+activate API
+API -> huisregelDatabase : selectHuisregel.req\n(huisregelModel)
+deactivate API
+activate huisregelDatabase
+huisregelDatabase --> API : confirmHuisregel.conf\n(huisregelModel, location, settings)
+deactivate huisregelDatabase
+activate API
+API --> tippiqWebsite : suggestHuisregel.conf\n(huisregelModel, location, settings)
+deactivate API
+activate tippiqWebsite
+tippiqWebsite --> User : suggestHuisregel.conf\n(huisregelModel)
+deactivate tippiqWebsite
+activate User
+User -> tippiqWebsite : chooseHuisregel+Location\n(huisregelModel, location, settings)
+deactivate User
+activate tippiqWebsite
+
+tippiqWebsite --> User : showCardStream(cardModel)
+deactivate tippiqWebsite
+
+== input cards ==
+
+externalParty o-> API : recieveMessages\n(credentials, cardData)
+API -> API : generateCard\n(cardModel)
+|||
+activate API
+note right : API checks\ncredentials
+API -> huisregelDatabase : saveCard\n(cardModel)
+deactivate API
+activate huisregelDatabase
+huisregelDatabase -> huisregelDatabase : query(insert)
+deactivate huisregelDatabase
+huisregelDatabase --> API : receiveCard\n(cardId)
+API -->o externalParty : receiveCard\n(cardId)
+== output cards ==
+tippiqWebsite o-> API : showCards.req\n(accessToken)
+API -> API : validateAccessToken\n(userId
+activate API
+API -> UserDatabase : getUserProfile\n(userId)
+deactivate API
+activate UserDatabase
+UserDatabase --> API : sendUserProfile\n(settings,location)
+deactivate UserDatabase
+activate API
+API -> huisregelDatabase : getCards.req\n(settings, location)
+deactivate API
+activate huisregelDatabase
+
+huisregelDatabase -> huisregelDatabase : query(select)
+deactivate huisregelDatabase
+huisregelDatabase --> API : showCards.conf\n(cardModel)
+API -->x tippiqWebsite : showCards.conf\n(cardModel)
+note left : Cards are\nin user stream
+
+
+legend right 
+**Legenda**
+__note__ = extra annotation
+(...) = data_attribute (separated by ,)
+__conf__ = data confirmation
+__req__ = data request
+endlegend
+
+
+@enduml
