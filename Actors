@@ -1,0 +1,19 @@
+Primary actors
+
+tippiq user
+Basic actor for everyone or system that needs to login or connect to the platform.
+Service Provider
+Our end customer for who we all make our services.
+End customer administrator
+When a service is a B2B service, a customer may have multiple people using our service. An end customer administrator has more access rights than a normal end customer and is for instance allowed to create accounts of manage authorizations for that customer.
+Servicedesk employee
+The servicedesk employee is the person end customers turn to when they have questions about their app / service. They therefor need access to the end customer data and must be able to change certain data from end customers.
+API owner – service provider
+For internal facing api's this is the lead architect and external facing the product manager. The product manager is the owner of the backend systems. Need insight in usage of api's for cost calculations and whether or not the api adds value. The usage gives a mean on how to price the use of the api.
+Service provider
+The business owner of the service that is delivered to users of the Tippiq platform. As the app owner pays for the use by usage of the Hercules platform the app owner needs insights into usage of the platform. Furthermore it gives additional insight in how the app uses the api's.
+App (frontend)
+The technical app / frontend itself. Needs a connection to the platform to obtain data to show.
+Backend application
+The backend applications provide the data and logic that the Hercules platform makes available via it's api's.
+
